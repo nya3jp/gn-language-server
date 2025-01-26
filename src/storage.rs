@@ -110,11 +110,13 @@ impl DocumentStorage {
             return Ok(doc.version);
         }
 
+        let start_time = Instant::now();
         let metadata = match fs_err::metadata(path) {
             Err(err) if err.kind() == ErrorKind::NotFound => return Ok(DocumentVersion::Missing),
             other => other?,
         };
         let modified = metadata.modified()?;
+        eprintln!("{}ms\tread_version({:?})", start_time.elapsed().as_millis(), path);
         Ok(DocumentVersion::OnDisk { modified })
     }
 
@@ -123,8 +125,10 @@ impl DocumentStorage {
             return Ok(doc.clone());
         }
         // Read the version first to be pesimistic about file changes.
+        let start_time = Instant::now();
         let version = self.read_version(path)?;
         let data = fs_err::read_to_string(path)?;
+        eprintln!("{}ms\tread({:?})", start_time.elapsed().as_millis(), path);
         Ok(Arc::pin(Document::new(path, data, version)))
     }
 
