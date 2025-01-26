@@ -14,6 +14,7 @@
 
 mod analyze;
 mod ast;
+#[cfg(not(target_family = "wasm"))]
 mod binary;
 mod builtins;
 mod client;

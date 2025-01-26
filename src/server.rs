@@ -14,6 +14,7 @@
 
 use std::{
     collections::HashSet,
+    os::fd::FromRawFd,
     path::PathBuf,
     sync::{Arc, Mutex},
 };
@@ -77,6 +78,7 @@ impl LanguageServer for Backend {
                 }),
                 document_symbol_provider: Some(OneOf::Left(true)),
                 completion_provider: Some(CompletionOptions::default()),
+                #[cfg(not(target_family = "wasm"))]
                 document_formatting_provider: Some(OneOf::Left(true)),
                 ..Default::default()
             },
@@ -162,6 +164,7 @@ impl LanguageServer for Backend {
         crate::providers::completion::completion(&self.context, params).await
     }
 
+    #[cfg(not(target_family = "wasm"))]
     async fn formatting(
         &self,
         params: DocumentFormattingParams,
@@ -177,7 +180,7 @@ pub async fn run() {
         Backend::new(&storage, &analyzer, TestableClient::new(client))
     });
 
-    let stdin = tokio::io::stdin();
-    let stdout = tokio::io::stdout();
+    let stdin = tokio::fs::File::from_std(unsafe { std::fs::File::from_raw_fd(0) });
+    let stdout = tokio::fs::File::from_std(unsafe { std::fs::File::from_raw_fd(1) });
     Server::new(stdin, stdout, socket).serve(service).await;
 }

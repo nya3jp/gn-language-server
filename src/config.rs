@@ -17,6 +17,7 @@ use std::path::PathBuf;
 #[derive(Default, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Configurations {
+    #[cfg(not(target_family = "wasm"))]
     pub binary_path: Option<PathBuf>,
     pub experimental: ExperimentalConfigurations,
 }
